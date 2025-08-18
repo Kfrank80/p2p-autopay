@@ -1,4 +1,39 @@
-# Evitar subir credenciales y datos sensibles
+# --- Archivos de entorno y configuración ---
 .env
+*.env
+!*.env.example
+
+# --- Entornos virtuales ---
+.venv/
+venv/
+env/
+
+# --- Compilados de Python ---
 __pycache__/
+*.py[cod]
+*$py.class
+
+# --- Logs y temporales ---
 *.log
+*.pot
+*.tmp
+*.temp
+
+# --- Salidas de pruebas ---
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+
+# --- IDE: PyCharm / IntelliJ ---
+.idea/
+*.iml
+
+# --- Archivos del sistema ---
+.DS_Store
+Thumbs.db
+
+# --- Cachés y backups ---
+*.bak
+*.swp
+.cache/
