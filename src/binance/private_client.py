@@ -70,7 +70,7 @@ def fetch_private_orders(
         data = resp.json()
 
         # Algunos endpoints devuelven código y mensaje en 200
-        if isinstance(data, dict) and data.get("code") not in (None, 200):
+        if not isinstance(data, dict):
             logging.error(f"[BINANCE][PRIVATE] API error code={data.get('code')}, msg={data.get('msg')}")
             return []
 
