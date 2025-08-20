@@ -1,8 +1,8 @@
 import requests
 from src.core import logger
-from core.config import DEBUG_MODE
+from core.config import DEBUG_MODE, PAYMENT_METHODS
 
-def get_p2p_orders(trade_type="BUY", asset="USDT", fiat="USD", pay_types=None):
+def get_p2p_orders(trade_type="BUY", asset="USDT", fiat="USD", pay_types=PAYMENT_METHODS):
     """
     Consulta órdenes activas en Binance P2P.
     """

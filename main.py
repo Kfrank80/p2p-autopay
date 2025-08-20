@@ -1,41 +1,43 @@
-import time
-from src.core import logger
-from core.config import CHECK_INTERVAL, MIN_AMOUNT, PAYMENT_METHODS, DEBUG_MODE
-from binance.binance_client import get_p2p_orders
-from telegram_.telegram_bot import send_message
+import logging
+import sys
+from core.config import MONITOR_MODE
+from core.order_monitor import monitor_orders
 
 def main():
-    logger.log("🚀 Bot Binance P2P iniciado.")
+    # Si el usuario pasa un argumento, ese modo prevalece sobre .env
+    mode = sys.argv[1] if len(sys.argv) > 1 else MONITOR_MODE
 
-    while True:
-        if DEBUG_MODE:
-            logger.log(f"🔍 Verificando órdenes... Mínimo: {MIN_AMOUNT}, Métodos: {PAYMENT_METHODS}")
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
+    )
 
-        orders = get_p2p_orders(
-            trade_type="Buy",
-            asset="USDT",
-            fiat="USD",
-            pay_types=PAYMENT_METHODS
-        )
+    logging.info("🚀 Bot Binance P2P Autopay iniciado.")
+    logging.info(f"Modo de monitorización: {mode}")
 
-        if not orders:
-            logger.log("⚠️ No se encontraron órdenes que coincidan con los filtros.")
-        else:
-            for order in orders:
-                price = order["adv"]["price"]
-                available = float(order["adv"]["surplusAmount"])
-                advertiser = order["advertiser"]["nickName"]
+    try:
+        monitor_orders_override(mode)
+    except KeyboardInterrupt:
+        logging.info("🛑 Ejecución interrumpida por el usuario.")
+    except Exception as e:
+        logging.error(f"❌ Error fatal en main.py: {e}")
 
-                if available >= MIN_AMOUNT:
-                    mensaje = f"💰 Orden encontrada: {advertiser} vende {available} USDT a {price} USD"
-                    logger.log(f"[MATCH] {mensaje}")
-                    send_message(mensaje)
+def monitor_orders_override(mode):
+    """
+    Llama al monitor de órdenes con el modo forzado.
+    """
+    from core.order_monitor import monitor_orders as base_monitor
+    from core.config import STATE_FILE, MONITOR_INTERVAL
+    import core.order_monitor as om
 
-        time.sleep(CHECK_INTERVAL)
-
+    # Guardamos modo original y forzamos temporalmente
+    original_mode = om.MONITOR_MODE if hasattr(om, "MONITOR_MODE") else None
+    om.MONITOR_MODE = mode
+    base_monitor()
+    # Restaurar si es necesario (normalmente no se alcanza por loop infinito)
+    if original_mode is not None:
+        om.MONITOR_MODE = original_mode
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        logger.log("🛑 Bot detenido por el usuario.")
+    main()
